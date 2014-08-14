@@ -47,17 +47,24 @@ function getValidTableIfPossible(ctable) {
         //console.log(child+" child "+cLengthArray[child]);
     }
     sortable.sort(function(a, b) {return -1*(a[1] - b[1])})
-    cLength = sortable[0][0];
-    //console.log("Clength: "+cLength);
-    for (var j=0;j<ctable.tableRows.length;j++) {
-        var cRow = ctable.tableRows[j];
-        if(cRow.lengthChild  != cLength ||cRow.CombinedText == "") {
-            cRow.validRow = false;
-            ctable.totalDH = ctable.totalDH - cRow.lengthDH;
-            ctable.rowLength = ctable.rowLength - 1;
+    if(sortable[0] && sortable[0][0]) {
+        cLength = sortable[0][0];
+        console.log("Clength: "+cLength+"  " +cLengthArray[cLength]);
+        for (var j=0;j<ctable.tableRows.length;j++) {
+            var cRow = ctable.tableRows[j];
+            if(cRow.lengthChild  != cLength || cRow.CombinedText == "") {
+                cRow.validRow = false;
+                ctable.totalDH = ctable.totalDH - cRow.lengthDH;
+                ctable.rowLength = ctable.rowLength - 1;
+                console.log("invalidating the row");
+            }
         }
+        console.log("Clength: row length "+ctable.rowLength+"  " +ctable.totalDH );
+        ctable.validTable = true;
+    } else {
+        ctable.validTable = false;
+        
     }
-    ctable.validTable = true;
     return cLength; 
     
 }
@@ -86,11 +93,16 @@ function verifyPrintGoodTables(ctable) {
 }
 
 function cleanString(myString) {
-    return myString.replace(/[\r\n]/g,"").replace(/\"/g,"");
+    if(myString) {
+        return myString.replace(/[\r\n]/g,"").replace(/\"/g,"").replace(/[^a-zA-Z0-9]/g,' ');;
+    } else {
+        console.log("undefined thing for cleaning");
+        return "";
+    }
 }
 
 function getJSONType1(table) {
-    //console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
+    console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
     var array = {};
     var jsoncollection= {};
     var firstrow = -1;
@@ -117,7 +129,7 @@ function getJSONType1(table) {
 }
 
 function getJSONType4(table) {
-    //console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
+    console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
     var array = {};
     var jsoncollection= {};
     var firstrow = -1;
@@ -140,7 +152,7 @@ function getJSONType4(table) {
 }
 
 function getJSONType2(table) {
-    //console.log("JSONizing with type 2");
+    console.log("JSONizing with type 2");
     var array = {};
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
@@ -152,12 +164,19 @@ function getJSONType2(table) {
 }
 
 function getJSONType3(table) {
-    //console.log("JSONizing with type 3");
+    console.log("JSONizing with type 3");
     var array = {};
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
-            //console.log(cleanString(table.tableRows[i].DT[0])+" : "+cleanString(table.tableRows[i].DT[1]));
-                array[cleanString(table.tableRows[i].DT[0])] = cleanString(table.tableRows[i].DT[1]);
+      //      console.log("lengths DT "+table.tableRows[i].lengthDT+" length DH"+table.tableRows[i].lengthDH);
+                if(table.tableRows[i].lengthDT == 2) {
+                    array[cleanString(table.tableRows[i].DT[0])] = cleanString(table.tableRows[i].DT[1]);
+                } else if (table.tableRows[i].lengthDT == 1 && table.tableRows[i].lengthDH == 1 ) {
+    //                console.log(table.tableRows[i].DH[0] +" DT length : "+table.tableRows[i].DT[0]); 
+                    array[cleanString(table.tableRows[i].DH[0])] = cleanString(table.tableRows[i].DT[0]);
+                } else if(table.tableRows[i].lengthDH == 2) {
+                    array[cleanString(table.tableRows[i].DH[0])] = cleanString(table.tableRows[i].DH[1]);
+                }
         }
     }
 /*    array = array.reduce(function(m,i){
@@ -169,7 +188,7 @@ function getJSONType3(table) {
 }
 
 function getJSON(table) {
-    //console.log("totalDH: "+table.totalDH+"table.columnLength: "+ table.columnLength+ "table.rowLength: "+table.rowLength);
+    console.log("totalDH: "+table.totalDH+"table.columnLength: "+ table.columnLength+ "table.rowLength: "+table.rowLength);
     if(table.rowLength > 2){
         if(table.totalDH == table.columnLength ) {
             //console.log("Jsoning the table as type 1");
@@ -183,7 +202,10 @@ function getJSON(table) {
         } else if ( table.totalDH == 0 && table.columnLength > 2) {
             //console.log("Jsoning the table as type 3");
             return getJSONType4(table);
-        }
+        } else if ( table.columnLength==2) {
+            //console.log("Jsoning the table as type 3");
+            return getJSONType3(table);
+        } 
     } else {
         return undefined;
     }
@@ -234,18 +256,34 @@ exports.jsonifyTable = function(errors,window) {
             if(currenttable.heading  == "") {
                 currenttable.heading = tablenum;
             }
-            $(this).find("tr").each(function(){
-//                console.log("New table row");
+            $(this).children("tr").each(function(){
+                console.log("New table row");
                 var currentTableRows = new tableRows();
-                currentTableRows.lengthDH = $(this).find("th").length;
-                currentTableRows.lengthDT = $(this).find("td").length;
+//                currentTableRows.lengthDH = $(this).find("th").length;
+  //              currentTableRows.lengthDT = $(this).find("td").length;
                 currentTableRows.lengthChild = $(this).children().length;
 //                console.log("TH NODES: "+$(this).find("th").length);
   //              console.log("TD NODES: "+$(this).find("td").length);
     //            console.log("Children: "+$(this).children().length);
                     //console.log($(this).text());
                 currentTableRows.CombinedText = "";
-                $(this).find("th").each(function(){
+                $(this).children().each(function() {
+                    console.log($(this).prop('tagName'));
+                    if($(this).prop('tagName') == "TH") {
+                        currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
+                        currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
+                        console.log("TH: "+$(this).text());
+                        currenttable.totalDH++;
+                        currentTableRows.lengthDH++;
+                    } else if ($(this).prop('tagName') == "TD") {
+                        currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
+                        currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
+                        console.log("TD: "+ $(this).text());
+                        currentTableRows.lengthDT++;
+                        
+                    }
+                });
+                /*$(this).find("th").each(function(){
                     currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
                     currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
 //                    console.log("TH: "+$(this).text());
@@ -256,7 +294,7 @@ exports.jsonifyTable = function(errors,window) {
                     currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
   //                  console.log("TD: "+ $(this).text());
 
-                });
+                });*/
                 currenttable.tableRows[currenttable.tableRows.length]= currentTableRows;
             });
             currenttable.columnLength =  verifyPrintGoodTables(currenttable);
