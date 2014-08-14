@@ -182,14 +182,19 @@ function jsonizeValidTables() {
 
 exports.jsonifyTable = function(errors,window) {
     var $ = window.$;
+    var tablenum = 0;
     console.log("Number of table: "+$("table").length);
     $("table").each(function() {
+            tablenum++;
             console.log("New Table");
             var currenttable = new tablesdatatype($(this).find("tr").length);
             tables[tables.length] = currenttable;
             console.log($(this).find("tr").length);
             console.log("heading"+$(this).prev(":header").text());
             currenttable.heading =  $(this).prev(":header").text();
+            if(currenttable.heading  == "") {
+                currenttable.heading = tablenum;
+            }
             $(this).find("tr").each(function(){
 //                console.log("New table row");
                 var currentTableRows = new tableRows();
