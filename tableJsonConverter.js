@@ -5,6 +5,7 @@ var tablesdatatype = function (rowslength) {
     this.columnLength =0;
     this.totalDH = 0;
     this.validTable = false;
+    this.heading = "";
 }
 
 var tableRows = function() {
@@ -85,8 +86,8 @@ function cleanString(myString) {
 
 function getJSONType1(table) {
     console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
-    var array = [];
-    var jsoncollection= [];
+    var array = {};
+    var jsoncollection= {};
     var firstrow = -1;
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
@@ -100,52 +101,43 @@ function getJSONType1(table) {
             }
             for( var j=0; j < table.columnLength; j++){
             //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
-                array.push(cleanString(table.tableRows[firstrow].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
+                array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DT[j]);
             }
-            array = array.reduce(function(m,i){
-                var s = i.split(':');
-                m[s.shift()] = s.join(':');
-                return m;
-            }, {});
-            jsoncollection.push(JSON.stringify(array));
-            array = [];
+            jsoncollection[i]=array;
+            array = {};
        }
     }
-    return(("{"+jsoncollection.toString()+"}"));
+    return(jsoncollection);
+    //return(("{"+jsoncollection.toString()+"}"));
 }
 
 function getJSONType2(table) {
     console.log("JSONizing with type 2");
-    var array = [];
+    var array = {};
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
  //           console.log(cleanString(table.tableRows[i].DH[0])+" : "+cleanString(table.tableRows[i].DT[0]));
-            array.push(cleanString(table.tableRows[i].DH[0])+" : "+cleanString(table.tableRows[i].DT[0]));
+            array[cleanString(table.tableRows[i].DH[0])] = cleanString(table.tableRows[i].DT[0]);
         }
     }
-    array = array.reduce(function(m,i){
-        var s = i.split(':');
-        m[s.shift()] = s.join(':');
-        return m;
-    }, {});
-    return(JSON.stringify(array));
+    return(array);
 }
 
 function getJSONType3(table) {
     console.log("JSONizing with type 3");
-    var array = [];
+    var array = {};
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
             //console.log(cleanString(table.tableRows[i].DT[0])+" : "+cleanString(table.tableRows[i].DT[1]));
-                array.push(cleanString(table.tableRows[i].DT[0])+" : "+cleanString(table.tableRows[i].DT[1]));
+                array[cleanString(table.tableRows[i].DT[0])] = cleanString(table.tableRows[i].DT[1]);
         }
     }
-    array = array.reduce(function(m,i){
+/*    array = array.reduce(function(m,i){
         var s = i.split(':');
         m[s.shift()] = s.join(':');
         return m;
-    }, {});
-    return(JSON.stringify(array));
+    }, {});*/
+    return (array);
 }
 
 function getJSON(table) {
@@ -167,17 +159,24 @@ function getJSON(table) {
 }
 
 function jsonizeValidTables() {
-console.log("jsoning the tables");
-for (var i = 0;i < tables.length; i++) {
-    if(tables[i].validTable) {
-        var json = getJSON(tables[i]);
-        if(json !== undefined && json != "{}") {
-           console.log("JSONNNN:"+json);
-        } else {
-//            console.log("This type of table yet not supported :"+"totalDH: "+tables[i].totalDH+"table.columnLength: "+ tables[i].columnLength+ "table.rowLength: "+tables[i].rowLength);
+    console.log("jsoning the tables");
+    var finaljsonobj = {};
+    for (var i = 0;i < tables.length; i++) {
+        if(tables[i].validTable) {
+            var json = getJSON(tables[i]);
+            if(json !== undefined && json != "{}") {
+               finaljsonobj[tables[i].heading] = json;
+            } else {
+    //            console.log("This type of table yet not supported :"+"totalDH: "+tables[i].totalDH+"table.columnLength: "+ tables[i].columnLength+ "table.rowLength: "+tables[i].rowLength);
+            }
         }
     }
-}
+/*    finaljsonobj = finaljsonobj.reduce(function(m,i){
+        var s = i.split(':');
+        m[s.shift()] = s.join(':');
+        return m;
+    }, {});*/
+    return(JSON.stringify(finaljsonobj, undefined, 2));
 
 }
 
@@ -189,6 +188,8 @@ exports.jsonifyTable = function(errors,window) {
             var currenttable = new tablesdatatype($(this).find("tr").length);
             tables[tables.length] = currenttable;
             console.log($(this).find("tr").length);
+            console.log("heading"+$(this).prev(":header").text());
+            currenttable.heading =  $(this).prev(":header").text();
             $(this).find("tr").each(function(){
 //                console.log("New table row");
                 var currentTableRows = new tableRows();
@@ -214,5 +215,5 @@ exports.jsonifyTable = function(errors,window) {
             currenttable.columnLength =  verifyPrintGoodTables(currenttable);
 //        console.log(" -", $(this).children());
     });
-    jsonizeValidTables();
+    console.log(jsonizeValidTables());
 }
