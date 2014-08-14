@@ -116,6 +116,29 @@ function getJSONType1(table) {
     //return(("{"+jsoncollection.toString()+"}"));
 }
 
+function getJSONType4(table) {
+    //console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
+    var array = {};
+    var jsoncollection= {};
+    var firstrow = -1;
+    for(var i=0; i < table.tableRows.length; i++) {
+        if (table.tableRows[i].validRow) {
+            if(firstrow == -1 ) {
+                    firstrow = i;
+                    continue;
+            }
+            for( var j=0; j < table.columnLength; j++){
+            //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
+                array[cleanString(table.tableRows[firstrow].DT[j])] = cleanString(table.tableRows[i].DT[j]);
+            }
+            jsoncollection[i]=array;
+            array = {};
+       }
+    }
+    return(jsoncollection);
+    //return(("{"+jsoncollection.toString()+"}"));
+}
+
 function getJSONType2(table) {
     //console.log("JSONizing with type 2");
     var array = {};
@@ -157,6 +180,9 @@ function getJSON(table) {
         } else if ( table.totalDH == 0 && table.columnLength==2) {
             //console.log("Jsoning the table as type 3");
             return getJSONType3(table);
+        } else if ( table.totalDH == 0 && table.columnLength > 2) {
+            //console.log("Jsoning the table as type 3");
+            return getJSONType4(table);
         }
     } else {
         return undefined;
@@ -197,6 +223,14 @@ exports.jsonifyTable = function(errors,window) {
             //console.log($(this).find("tr").length);
 //            console.log("heading"+$(this).prev(":header").text());
             currenttable.heading =  $(this).prev(":header").text();
+            var parent__ = $(this).parent();
+            var max = 5;
+            if(currenttable.heading  == "" && parent__ !== undefined && max >0 ) {
+                currenttable.heading = parent__.prev(":header").text();
+                parent__ = parent__.parent();
+                max--;
+//                console.log(parent__);
+            }
             if(currenttable.heading  == "") {
                 currenttable.heading = tablenum;
             }
