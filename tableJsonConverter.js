@@ -11,6 +11,7 @@ var tablesdatatype = function (rowslength) {
 var tableRows = function() {
     this.DH = [];
     this.DT = [];
+    this.CombinedText = "";
     this.lengthDH = 0;
     this.lengthDT = 0;
     this.lengthChild = 0;
@@ -29,24 +30,28 @@ function compare(a,b) {
 function getValidTableIfPossible(ctable) {
     var vTable = false;
     var cLength = -1;
-    var cLengthArray = [];
+    var cLengthArray = {};
     for (var j=0;j<ctable.tableRows.length;j++) {
         var cRow = ctable.tableRows[j];
-        if(cLengthArray[cRow.lengthChild]) {
-            cLengthArray[cRow.lengthChild]++;
-        } else {
-            cLengthArray[cRow.lengthChild] = 1;
+        if( cRow.CombinedText != "") {
+            if(cLengthArray[cRow.lengthChild] !== undefined) {
+                cLengthArray[cRow.lengthChild]++;
+            } else {
+                cLengthArray[cRow.lengthChild] = 1;
+            }
         }
     }
     var sortable = [];
-    for (var child in cLengthArray)
-      sortable.push([child, cLengthArray[child]])
-    sortable.sort(function(a, b) {return a[1] - b[1]})
-    cLength = sortable[0][1];
-    console.log("Clength: "+cLength);
+    for (var child in cLengthArray) {
+        sortable.push([child, cLengthArray[child]])
+        //console.log(child+" child "+cLengthArray[child]);
+    }
+    sortable.sort(function(a, b) {return -1*(a[1] - b[1])})
+    cLength = sortable[0][0];
+    //console.log("Clength: "+cLength);
     for (var j=0;j<ctable.tableRows.length;j++) {
         var cRow = ctable.tableRows[j];
-        if(cRow.lengthChild  != cLength) {
+        if(cRow.lengthChild  != cLength ||cRow.CombinedText == "") {
             cRow.validRow = false;
             ctable.totalDH = ctable.totalDH - cRow.lengthDH;
             ctable.rowLength = ctable.rowLength - 1;
@@ -72,7 +77,7 @@ function verifyPrintGoodTables(ctable) {
         }
     }
     if(vTable) {
-        console.log("table is valid: "+cLength);
+        //console.log("table is valid: "+cLength);
         ctable.validTable = vTable;
         return cLength;
     } else {
@@ -85,7 +90,7 @@ function cleanString(myString) {
 }
 
 function getJSONType1(table) {
-    console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
+    //console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
     var array = {};
     var jsoncollection= {};
     var firstrow = -1;
@@ -112,7 +117,7 @@ function getJSONType1(table) {
 }
 
 function getJSONType2(table) {
-    console.log("JSONizing with type 2");
+    //console.log("JSONizing with type 2");
     var array = {};
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
@@ -124,7 +129,7 @@ function getJSONType2(table) {
 }
 
 function getJSONType3(table) {
-    console.log("JSONizing with type 3");
+    //console.log("JSONizing with type 3");
     var array = {};
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
@@ -144,13 +149,13 @@ function getJSON(table) {
     //console.log("totalDH: "+table.totalDH+"table.columnLength: "+ table.columnLength+ "table.rowLength: "+table.rowLength);
     if(table.rowLength > 2){
         if(table.totalDH == table.columnLength ) {
-            console.log("Jsoning the table as type 1");
+            //console.log("Jsoning the table as type 1");
             return getJSONType1(table);
         } else if (table.totalDH == table.rowLength) {
-            console.log("Jsoning the table as type 2");
+            //console.log("Jsoning the table as type 2");
             return getJSONType2(table);        
         } else if ( table.totalDH == 0 && table.columnLength==2) {
-            console.log("Jsoning the table as type 3");
+            //console.log("Jsoning the table as type 3");
             return getJSONType3(table);
         }
     } else {
@@ -159,7 +164,7 @@ function getJSON(table) {
 }
 
 function jsonizeValidTables() {
-    console.log("jsoning the tables");
+    //console.log("jsoning the tables");
     var finaljsonobj = {};
     for (var i = 0;i < tables.length; i++) {
         if(tables[i].validTable) {
@@ -183,14 +188,14 @@ function jsonizeValidTables() {
 exports.jsonifyTable = function(errors,window) {
     var $ = window.$;
     var tablenum = 0;
-    console.log("Number of table: "+$("table").length);
+    //console.log("Number of table: "+$("table").length);
     $("table").each(function() {
             tablenum++;
-            console.log("New Table");
+            //console.log("New Table");
             var currenttable = new tablesdatatype($(this).find("tr").length);
             tables[tables.length] = currenttable;
-            console.log($(this).find("tr").length);
-            console.log("heading"+$(this).prev(":header").text());
+            //console.log($(this).find("tr").length);
+//            console.log("heading"+$(this).prev(":header").text());
             currenttable.heading =  $(this).prev(":header").text();
             if(currenttable.heading  == "") {
                 currenttable.heading = tablenum;
@@ -205,13 +210,16 @@ exports.jsonifyTable = function(errors,window) {
   //              console.log("TD NODES: "+$(this).find("td").length);
     //            console.log("Children: "+$(this).children().length);
                     //console.log($(this).text());
+                currentTableRows.CombinedText = "";
                 $(this).find("th").each(function(){
                     currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
+                    currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
 //                    console.log("TH: "+$(this).text());
                     currenttable.totalDH++;
                 });
                 $(this).find("td").each(function(){
                     currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
+                    currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
   //                  console.log("TD: "+ $(this).text());
 
                 });
