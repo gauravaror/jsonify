@@ -16,6 +16,46 @@ var tableRows = function() {
     this.validRow = false;
 }
 
+function compare(a,b) {
+  if (a.last_nom < b.last_nom)
+     return -1;
+  if (a.last_nom > b.last_nom)
+    return 1;
+  return 0;
+}
+
+
+function getValidTableIfPossible(ctable) {
+    var vTable = false;
+    var cLength = -1;
+    var cLengthArray = [];
+    for (var j=0;j<ctable.tableRows.length;j++) {
+        var cRow = ctable.tableRows[j];
+        if(cLengthArray[cRow.lengthChild]) {
+            cLengthArray[cRow.lengthChild]++;
+        } else {
+            cLengthArray[cRow.lengthChild] = 1;
+        }
+    }
+    var sortable = [];
+    for (var child in cLengthArray)
+      sortable.push([child, cLengthArray[child]])
+    sortable.sort(function(a, b) {return a[1] - b[1]})
+    cLength = sortable[0][1];
+    console.log("Clength: "+cLength);
+    for (var j=0;j<ctable.tableRows.length;j++) {
+        var cRow = ctable.tableRows[j];
+        if(cRow.lengthChild  != cLength) {
+            cRow.validRow = false;
+            ctable.totalDH = ctable.totalDH - cRow.lengthDH;
+            ctable.rowLength = ctable.rowLength - 1;
+        }
+    }
+    ctable.validTable = true;
+    return cLength; 
+    
+}
+
 function verifyPrintGoodTables(ctable) {
     var vTable = true;
     var cLength = -1;
@@ -28,35 +68,48 @@ function verifyPrintGoodTables(ctable) {
         }
         if(cRow.lengthDH + cRow.lengthDT == cRow.lengthChild) {
             cRow.validRow = true;
-        } else {
-            vTable = false;
         }
     }
     if(vTable) {
         console.log("table is valid: "+cLength);
         ctable.validTable = vTable;
         return cLength;
+    } else {
+        return getValidTableIfPossible(ctable);
     }
 }
+
 function cleanString(myString) {
     return myString.replace(/[\r\n]/g,"").replace(/\"/g,"");
 }
+
 function getJSONType1(table) {
     console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
     var array = [];
     var jsoncollection= [];
-    for(var i=1; i < table.tableRows.length; i++) {
-        for( var j=0; j < table.columnLength; j++){
-        //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
-            array.push(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
-        }
-        array = array.reduce(function(m,i){
-            var s = i.split(':');
-            m[s.shift()] = s.join(':');
-            return m;
-        }, {});
-        jsoncollection.push(JSON.stringify(array));
-        array = [];
+    var firstrow = -1;
+    for(var i=0; i < table.tableRows.length; i++) {
+        if (table.tableRows[i].validRow) {
+            if(firstrow == -1 ) {
+                if(table.tableRows[i].lengthDH > 0){
+                    firstrow = i;
+                    continue;
+                } else {
+                    return undefined;
+                }
+            }
+            for( var j=0; j < table.columnLength; j++){
+            //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
+                array.push(cleanString(table.tableRows[firstrow].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
+            }
+            array = array.reduce(function(m,i){
+                var s = i.split(':');
+                m[s.shift()] = s.join(':');
+                return m;
+            }, {});
+            jsoncollection.push(JSON.stringify(array));
+            array = [];
+       }
     }
     return(("{"+jsoncollection.toString()+"}"));
 }
@@ -65,8 +118,10 @@ function getJSONType2(table) {
     console.log("JSONizing with type 2");
     var array = [];
     for(var i=0; i < table.tableRows.length; i++) {
+        if (table.tableRows[i].validRow) {
  //           console.log(cleanString(table.tableRows[i].DH[0])+" : "+cleanString(table.tableRows[i].DT[0]));
             array.push(cleanString(table.tableRows[i].DH[0])+" : "+cleanString(table.tableRows[i].DT[0]));
+        }
     }
     array = array.reduce(function(m,i){
         var s = i.split(':');
@@ -80,8 +135,10 @@ function getJSONType3(table) {
     console.log("JSONizing with type 3");
     var array = [];
     for(var i=0; i < table.tableRows.length; i++) {
+        if (table.tableRows[i].validRow) {
             //console.log(cleanString(table.tableRows[i].DT[0])+" : "+cleanString(table.tableRows[i].DT[1]));
-            array.push(cleanString(table.tableRows[i].DT[0])+" : "+cleanString(table.tableRows[i].DT[1]));
+                array.push(cleanString(table.tableRows[i].DT[0])+" : "+cleanString(table.tableRows[i].DT[1]));
+        }
     }
     array = array.reduce(function(m,i){
         var s = i.split(':');
@@ -93,15 +150,19 @@ function getJSONType3(table) {
 
 function getJSON(table) {
     //console.log("totalDH: "+table.totalDH+"table.columnLength: "+ table.columnLength+ "table.rowLength: "+table.rowLength);
-    if(table.totalDH == table.columnLength ) {
-        console.log("Jsoning the table as type 1");
-        return getJSONType1(table);
-    } else if (table.totalDH == table.rowLength) {
-        console.log("Jsoning the table as type 2");
-        return getJSONType2(table);        
-    } else if ( table.totalDH == 0 && table.columnLength==2) {
-        console.log("Jsoning the table as type 3");
-        return getJSONType3(table);
+    if(table.rowLength > 2){
+        if(table.totalDH == table.columnLength ) {
+            console.log("Jsoning the table as type 1");
+            return getJSONType1(table);
+        } else if (table.totalDH == table.rowLength) {
+            console.log("Jsoning the table as type 2");
+            return getJSONType2(table);        
+        } else if ( table.totalDH == 0 && table.columnLength==2) {
+            console.log("Jsoning the table as type 3");
+            return getJSONType3(table);
+        }
+    } else {
+        return undefined;
     }
 }
 
@@ -109,7 +170,12 @@ function jsonizeValidTables() {
 console.log("jsoning the tables");
 for (var i = 0;i < tables.length; i++) {
     if(tables[i].validTable) {
-        console.log("JSONNNN:"+getJSON(tables[i]));
+        var json = getJSON(tables[i]);
+        if(json !== undefined && json != "{}") {
+           console.log("JSONNNN:"+json);
+        } else {
+//            console.log("This type of table yet not supported :"+"totalDH: "+tables[i].totalDH+"table.columnLength: "+ tables[i].columnLength+ "table.rowLength: "+tables[i].rowLength);
+        }
     }
 }
 
