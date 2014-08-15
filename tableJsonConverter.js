@@ -32,7 +32,8 @@ function getValidTableIfPossible(ctable) {
     var cLength = -1;
     var cLengthArray = {};
     for (var j=0;j<ctable.tableRows.length;j++) {
-        var cRow = ctable.tableRows[j];
+        var cRow = ctable.tableRows[j]; 
+        console.log("crow length"+cRow.lengthChild);
         if( cRow.CombinedText != "") {
             if(cLengthArray[cRow.lengthChild] !== undefined) {
                 cLengthArray[cRow.lengthChild]++;
@@ -49,7 +50,7 @@ function getValidTableIfPossible(ctable) {
     sortable.sort(function(a, b) {return -1*(a[1] - b[1])})
     if(sortable[0] && sortable[0][0]) {
         cLength = sortable[0][0];
-        console.log("Clength: "+cLength+"  " +cLengthArray[cLength]);
+        console.log("Clength: "+cLength+" "+sortable[0][1]+"  " +cLengthArray[cLength]);
         for (var j=0;j<ctable.tableRows.length;j++) {
             var cRow = ctable.tableRows[j];
             if(cRow.lengthChild  != cLength || cRow.CombinedText == "") {
@@ -84,7 +85,7 @@ function verifyPrintGoodTables(ctable) {
         }
     }
     if(vTable) {
-        //console.log("table is valid: "+cLength);
+        console.log("table is valid: "+cLength);
         ctable.validTable = vTable;
         return cLength;
     } else {
@@ -141,12 +142,21 @@ function getJSONType4(table) {
             }
             for( var j=0; j < table.columnLength; j++){
             //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
-                array[cleanString(table.tableRows[firstrow].DT[j])] = cleanString(table.tableRows[i].DT[j]);
+                if( table.tableRows[firstrow].lengthDT > 0 && table.tableRows[firstrow].lengthDH == 0 && table.tableRows[i].lengthDT > 0 && table.tableRows[i].lengthDH == 0) {
+                    array[cleanString(table.tableRows[firstrow].DT[j])] = cleanString(table.tableRows[i].DT[j]);
+                } else if ( table.tableRows[firstrow].lengthDT > 0 && table.tableRows[firstrow].lengthDH == 0 && table.tableRows[i].lengthDT == 0 && table.tableRows[i].lengthDH >  0) {
+                    array[cleanString(table.tableRows[firstrow].DT[j])] = cleanString(table.tableRows[i].DH[j]);
+                } else if ( table.tableRows[firstrow].lengthDT == 0 && table.tableRows[firstrow].lengthDH > 0 && table.tableRows[i].lengthDT == 0 && table.tableRows[i].lengthDH >  0) {
+                    array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DH[j]);
+                } else if ( table.tableRows[firstrow].lengthDT == 0 && table.tableRows[firstrow].lengthDH > 0 && table.tableRows[i].lengthDT > 0 && table.tableRows[i].lengthDH ==  0) {
+                    array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DT[j]);
+                }
             }
             jsoncollection[i]=array;
             array = {};
        }
     }
+    console.log(jsoncollection);
     return(jsoncollection);
     //return(("{"+jsoncollection.toString()+"}"));
 }
@@ -205,14 +215,16 @@ function getJSON(table) {
         } else if ( table.columnLength==2) {
             //console.log("Jsoning the table as type 3");
             return getJSONType3(table);
-        } 
+        } else if (table.columnLength > 2) {
+            return getJSONType4(table);
+        }
     } else {
         return undefined;
     }
 }
 
 function jsonizeValidTables() {
-    //console.log("jsoning the tables");
+    console.log("jsoning the tables");
     var finaljsonobj = {};
     for (var i = 0;i < tables.length; i++) {
         if(tables[i].validTable) {
@@ -238,6 +250,8 @@ exports.jsonifyTable = function(errors,window) {
     var tablenum = 0;
     //console.log("Number of table: "+$("table").length);
     $("table").each(function() {
+            var handlesRowSpanDH = [];
+            var handlesRowSpanDT = [];
             tablenum++;
             //console.log("New Table");
             var currenttable = new tablesdatatype($(this).find("tr").length);
@@ -267,19 +281,69 @@ exports.jsonifyTable = function(errors,window) {
     //            console.log("Children: "+$(this).children().length);
                     //console.log($(this).text());
                 currentTableRows.CombinedText = "";
+                for(var i=0;i< handlesRowSpanDH.length;i++) {
+                    if(handlesRowSpanDH[i].count > 0) {
+                        currentTableRows.DH[currentTableRows.DH.length] = handlesRowSpanDH[i].text;
+                        currentTableRows.CombinedText = currentTableRows.CombinedText + handlesRowSpanDH[i].text;
+                        console.log("TH(rowspan): "+handlesRowSpanDH[i].text);
+                        currenttable.totalDH++;
+                        handlesRowSpanDH[i].count--;
+                        currentTableRows.lengthDH++;  
+                        currentTableRows.lengthChild++; 
+                    }
+                }
+                for(var i=0;i< handlesRowSpanDT.length;i++) {
+                    if(handlesRowSpanDT[i].count > 0) {
+                        currentTableRows.DT[currentTableRows.DT.length] = handlesRowSpanDT[i].text;
+                        currentTableRows.CombinedText = currentTableRows.CombinedText + handlesRowSpanDT[i].text;
+                        console.log("TD(rowspan): "+ handlesRowSpanDT[i].text);
+                        currentTableRows.lengthDT++;       
+                        handlesRowSpanDT[i].count--;
+                        currentTableRows.lengthChild++; 
+                    }
+                }
                 $(this).children().each(function() {
                     console.log($(this).prop('tagName'));
                     if($(this).prop('tagName') == "TH") {
-                        currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
-                        currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
-                        console.log("TH: "+$(this).text());
-                        currenttable.totalDH++;
-                        currentTableRows.lengthDH++;
+                        var rowspan = $(this).prop('rowspan');
+                        var datarowspan = {};
+                        var colspan = $(this).prop('colspan');
+                        do {
+                            if(colspan != $(this).prop('colspan')) {
+                                currentTableRows.lengthChild++; 
+                            }
+                            currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
+                            currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
+                            console.log("TH(colspan): "+$(this).text());
+                            currenttable.totalDH++;
+                            currentTableRows.lengthDH++;
+                            colspan--;
+                        } while(colspan>0);
+                        if(rowspan > 1) {
+                            datarowspan['count'] = rowspan-1;
+                            datarowspan['text'] = $(this).text();
+                            handlesRowSpanDH[handlesRowSpanDH.length] = datarowspan;
+                        }
+
                     } else if ($(this).prop('tagName') == "TD") {
-                        currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
-                        currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
-                        console.log("TD: "+ $(this).text());
-                        currentTableRows.lengthDT++;
+                        var rowspan = $(this).prop('rowspan');
+                        var colspan = $(this).prop('colspan');
+                        var datarowspan = {};
+                        do {
+                            if(colspan != $(this).prop('colspan')) {
+                                currentTableRows.lengthChild++; 
+                            }
+                            currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
+                            currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text;
+                            console.log("TD(colspan): "+ $(this).text());
+                            currentTableRows.lengthDT++;
+                            colspan--;
+                        } while(colspan>0);
+                        if(rowspan > 1) {
+                            datarowspan['count'] = rowspan-1;
+                            datarowspan['text'] = $(this).text();
+                            handlesRowSpanDT[handlesRowSpanDT.length] = datarowspan;
+                        }
                         
                     }
                 });
