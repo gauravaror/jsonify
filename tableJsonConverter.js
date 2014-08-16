@@ -308,9 +308,15 @@ exports.jsonifyTable = function(errors,window) {
                         var rowspan = $(this).prop('rowspan');
                         var datarowspan = {};
                         var colspan = $(this).prop('colspan');
+                        var discardcolspan = false;
                         do {
+                            
                             if(colspan != $(this).prop('colspan')) {
                                 currentTableRows.lengthChild++; 
+                            } else {
+                                if(currentTableRows.lengthChild == 1) {
+                                    discardcolspan = true;
+                                }
                             }
                             currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
                             currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
@@ -318,6 +324,9 @@ exports.jsonifyTable = function(errors,window) {
                             currenttable.totalDH++;
                             currentTableRows.lengthDH++;
                             colspan--;
+                            if(discardcolspan) {
+                                break;
+                            }
                         } while(colspan>0);
                         if(rowspan > 1) {
                             datarowspan['count'] = rowspan-1;
