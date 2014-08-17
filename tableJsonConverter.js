@@ -278,7 +278,7 @@ exports.jsonifyTable = function(errors,window) {
                 currentTableRows.lengthChild = $(this).children().length;
 //                console.log("TH NODES: "+$(this).find("th").length);
   //              console.log("TD NODES: "+$(this).find("td").length);
-    //            console.log("Children: "+$(this).children().length);
+                console.log("Children: "+$(this).children().length);
                     //console.log($(this).text());
                 currentTableRows.CombinedText = "";
                 for(var i=0;i< handlesRowSpanDH.length;i++) {
@@ -308,14 +308,14 @@ exports.jsonifyTable = function(errors,window) {
                         var rowspan = $(this).prop('rowspan');
                         var datarowspan = {};
                         var colspan = $(this).prop('colspan');
-                        var discardcolspan = false;
                         do {
                             
                             if(colspan != $(this).prop('colspan')) {
                                 currentTableRows.lengthChild++; 
                             } else {
-                                if(currentTableRows.lengthChild == 1) {
-                                    discardcolspan = true;
+                                console.log("discard colspan"+currentTableRows.lengthChild);
+                                if(currentTableRows.lengthChild <= 1) {
+                                    break;
                                 }
                             }
                             currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
@@ -324,9 +324,6 @@ exports.jsonifyTable = function(errors,window) {
                             currenttable.totalDH++;
                             currentTableRows.lengthDH++;
                             colspan--;
-                            if(discardcolspan) {
-                                break;
-                            }
                         } while(colspan>0);
                         if(rowspan > 1) {
                             datarowspan['count'] = rowspan-1;
@@ -341,6 +338,11 @@ exports.jsonifyTable = function(errors,window) {
                         do {
                             if(colspan != $(this).prop('colspan')) {
                                 currentTableRows.lengthChild++; 
+                            } else {
+                                console.log("discard colspan"+currentTableRows.lengthChild);
+                                if(currentTableRows.lengthChild <= 1) {
+                                    break;
+                                }
                             }
                             currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
                             currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text;
