@@ -1,0 +1,7 @@
+#jsoncontent {
+  width: 300px;
+    height: 420px;
+    overflow-x: scroll;
+    overflow-y: scroll;
+    white-space: nowrap;
+}
