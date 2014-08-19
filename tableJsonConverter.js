@@ -1,4 +1,10 @@
 var tables= [];
+var tablenum = 0;
+var handlesRowSpanDH = [];
+var handlesRowSpanDT = [];
+var currenttable;
+var currentTableRows;
+var $;
 var tablesdatatype = function (rowslength) { 
     this.tableRows = [];
     this.rowLength = rowslength;
@@ -244,65 +250,7 @@ function jsonizeValidTables() {
     return(JSON.stringify(finaljsonobj, undefined, 2));
 
 }
-
-exports.jsonifyTable = function(errors,window) {
-    var $ = window.$;
-    var tablenum = 0;
-    //console.log("Number of table: "+$("table").length);
-    $("table").each(function() {
-            var handlesRowSpanDH = [];
-            var handlesRowSpanDT = [];
-            tablenum++;
-            //console.log("New Table");
-            var currenttable = new tablesdatatype($(this).find("tr").length);
-            tables[tables.length] = currenttable;
-            //console.log($(this).find("tr").length);
-//            console.log("heading"+$(this).prev(":header").text());
-            currenttable.heading =  $(this).prev(":header").text();
-            var parent__ = $(this).parent();
-            var max = 5;
-            if(currenttable.heading  == "" && parent__ !== undefined && max >0 ) {
-                currenttable.heading = parent__.prev(":header").text();
-                parent__ = parent__.parent();
-                max--;
-//                console.log(parent__);
-            }
-            if(currenttable.heading  == "") {
-                currenttable.heading = tablenum;
-            }
-            $(this).children("tr").each(function(){
-                console.log("New table row");
-                var currentTableRows = new tableRows();
-//                currentTableRows.lengthDH = $(this).find("th").length;
-  //              currentTableRows.lengthDT = $(this).find("td").length;
-                currentTableRows.lengthChild = $(this).children().length;
-//                console.log("TH NODES: "+$(this).find("th").length);
-  //              console.log("TD NODES: "+$(this).find("td").length);
-                console.log("Children: "+$(this).children().length);
-                    //console.log($(this).text());
-                currentTableRows.CombinedText = "";
-                for(var i=0;i< handlesRowSpanDH.length;i++) {
-                    if(handlesRowSpanDH[i].count > 0) {
-                        currentTableRows.DH[currentTableRows.DH.length] = handlesRowSpanDH[i].text;
-                        currentTableRows.CombinedText = currentTableRows.CombinedText + handlesRowSpanDH[i].text;
-                        console.log("TH(rowspan): "+handlesRowSpanDH[i].text);
-                        currenttable.totalDH++;
-                        handlesRowSpanDH[i].count--;
-                        currentTableRows.lengthDH++;  
-                        currentTableRows.lengthChild++; 
-                    }
-                }
-                for(var i=0;i< handlesRowSpanDT.length;i++) {
-                    if(handlesRowSpanDT[i].count > 0) {
-                        currentTableRows.DT[currentTableRows.DT.length] = handlesRowSpanDT[i].text;
-                        currentTableRows.CombinedText = currentTableRows.CombinedText + handlesRowSpanDT[i].text;
-                        console.log("TD(rowspan): "+ handlesRowSpanDT[i].text);
-                        currentTableRows.lengthDT++;       
-                        handlesRowSpanDT[i].count--;
-                        currentTableRows.lengthChild++; 
-                    }
-                }
-                $(this).children().each(function() {
+function  handleRowChildrens() {
                     console.log($(this).prop('tagName'));
                     if($(this).prop('tagName') == "TH") {
                         var rowspan = $(this).prop('rowspan');
@@ -357,23 +305,80 @@ exports.jsonifyTable = function(errors,window) {
                         }
                         
                     }
-                });
-                /*$(this).find("th").each(function(){
-                    currentTableRows.DH[currentTableRows.DH.length] = $(this).text();
-                    currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
-//                    console.log("TH: "+$(this).text());
-                    currenttable.totalDH++;
-                });
-                $(this).find("td").each(function(){
-                    currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
-                    currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text();
-  //                  console.log("TD: "+ $(this).text());
+}
 
-                });*/
+
+function  handleRow(){
+                console.log("New table row");
+                currentTableRows = new tableRows();
+//                currentTableRows.lengthDH = $(this).find("th").length;
+  //              currentTableRows.lengthDT = $(this).find("td").length;
+                currentTableRows.lengthChild = $(this).children().length;
+                console.log("TH NODES: "+$(this).find("th").length);
+                console.log("TD NODES: "+$(this).find("td").length);
+                console.log("Children: "+$(this).children().length);
+                    //console.log($(this).text());
+                currentTableRows.CombinedText = "";
+                for(var i=0;i< handlesRowSpanDH.length;i++) {
+                    if(handlesRowSpanDH[i].count > 0) {
+                        currentTableRows.DH[currentTableRows.DH.length] = handlesRowSpanDH[i].text;
+                        currentTableRows.CombinedText = currentTableRows.CombinedText + handlesRowSpanDH[i].text;
+                        console.log("TH(rowspan): "+handlesRowSpanDH[i].text);
+                        currenttable.totalDH++;
+                        handlesRowSpanDH[i].count--;
+                        currentTableRows.lengthDH++;  
+                        currentTableRows.lengthChild++; 
+                    }
+                }
+                for(var i=0;i< handlesRowSpanDT.length;i++) {
+                    if(handlesRowSpanDT[i].count > 0) {
+                        currentTableRows.DT[currentTableRows.DT.length] = handlesRowSpanDT[i].text;
+                        currentTableRows.CombinedText = currentTableRows.CombinedText + handlesRowSpanDT[i].text;
+                        console.log("TD(rowspan): "+ handlesRowSpanDT[i].text);
+                        currentTableRows.lengthDT++;       
+                        handlesRowSpanDT[i].count--;
+                        currentTableRows.lengthChild++; 
+                    }
+                }
+                $(this).children().each(handleRowChildrens);
                 currenttable.tableRows[currenttable.tableRows.length]= currentTableRows;
-            });
+}
+            
+function handleTable() {
+            tablenum++;
+            //console.log("New Table");
+            currenttable = new tablesdatatype($(this).find("tr").length);
+            tables[tables.length] = currenttable;
+            console.log($(this).children("tr").length);
+            console.log("heading"+$(this).prev(":header").text());
+            currenttable.heading =  $(this).prev(":header").text();
+            var parent__ = $(this).parent();
+            var max = 5;
+            if(currenttable.heading  == "" && parent__ !== undefined && max >0 ) {
+                currenttable.heading = parent__.prev(":header").text();
+                parent__ = parent__.parent();
+                max--;
+//                console.log(parent__);
+            }
+            if(currenttable.heading  == "") {
+                currenttable.heading = tablenum;
+            }
+            $(this).children('tr').each(handleRow);
+            $(this).children('tbody').each(handleTable);
             currenttable.columnLength =  verifyPrintGoodTables(currenttable);
 //        console.log(" -", $(this).children());
-    });
-    console.log(jsonizeValidTables());
 }
+
+jsonifyTable = function(errors,window) {
+    $ = window.$;
+    console.log("Number of table: "+$("table").length);
+    $("table").each(handleTable);
+    var json = jsonizeValidTables();
+    chrome.runtime.sendMessage({ jsonresult: "OK", url : window.href, result : json}, function(response) {
+      console.log(response);
+    });
+  console.log(json);
+
+}
+jsonifyTable([],window);
+//exports.jsonifyTable = jsonifyTable
