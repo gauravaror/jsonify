@@ -111,7 +111,7 @@ function cleanString(myString) {
 function getJSONType1(table) {
     console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
     var array = {};
-    var jsoncollection= {};
+    var jsoncollection= [];
     var firstrow = -1;
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
@@ -127,7 +127,7 @@ function getJSONType1(table) {
             //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
                 array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DT[j]);
             }
-            jsoncollection[i]=array;
+            jsoncollection.push(array);
             array = {};
        }
     }
@@ -138,7 +138,7 @@ function getJSONType1(table) {
 function getJSONType4(table) {
     console.log("JSONizing with type 1,table.tableRows.length :"+table.tableRows.length);
     var array = {};
-    var jsoncollection= {};
+    var jsoncollection= [];
     var firstrow = -1;
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
@@ -158,7 +158,7 @@ function getJSONType4(table) {
                     array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DT[j]);
                 }
             }
-            jsoncollection[i]=array;
+            jsoncollection.push(array);
             array = {};
        }
     }
