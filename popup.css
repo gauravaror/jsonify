@@ -1,7 +1,10 @@
 #jsoncontent {
-  width: 300px;
+  width: 500px;
     height: 420px;
     overflow-x: scroll;
     overflow-y: scroll;
     white-space: nowrap;
+}
+body {
+background: #ECE9E9 -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ECE9E9));
 }
