@@ -34,6 +34,8 @@ function compare(a,b) {
 
 
 function getValidTableIfPossible(ctable) {
+    console.log("ctable: validTable if possibleable:");
+    console.log(ctable);
     var vTable = false;
     var cLength = -1;
     var cLengthArray = {};
@@ -77,6 +79,8 @@ function getValidTableIfPossible(ctable) {
 }
 
 function verifyPrintGoodTables(ctable) {
+    console.log("ctable: verifyPrint good table:");
+    console.log(ctable);
     var vTable = true;
     var cLength = -1;
     for (var j=0;j<ctable.tableRows.length;j++) {
