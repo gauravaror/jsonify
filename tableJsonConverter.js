@@ -207,6 +207,20 @@ function getJSONType3(table) {
     return (array);
 }
 
+function getJSONType5(table) {
+    console.log("JSONizing with type 5");
+    var array = {};
+	var jsoncollection =[];
+    for(var i=0; i < table.tableRows.length; i++) {
+        if (table.tableRows[i].validRow) {
+			array[table.heading] = cleanString(table.tableRows[i].DT[0]);
+			jsoncollection.push(array);
+			array = {};
+        }
+    }
+    return (jsoncollection);
+}
+
 function getJSON(table) {
     console.log("totalDH: "+table.totalDH+"table.columnLength: "+ table.columnLength+ "table.rowLength: "+table.rowLength);
     if(table.rowLength > 2){
@@ -225,9 +239,11 @@ function getJSON(table) {
         } else if ( table.columnLength==2) {
             //console.log("Jsoning the table as type 3");
             return getJSONType3(table);
-        } else if (table.columnLength > 2) {
+        } else if (table.columnLength > 2) { 
             return getJSONType4(table);
-        }
+        } else if (table.columnLength==1 && table.heading != null) {
+			return getJSONType5(table);
+		}
     } else {
         return undefined;
     }
@@ -311,6 +327,17 @@ function  handleRowChildrens() {
                     }
 }
 
+function handleLI() {
+	currentTableRows = new tableRows();
+	currentTableRows.lengthChild = $(this).children().length;
+	currentTableRows.CombinedText = "";
+	currentTableRows.DT[currentTableRows.DT.length] = $(this).text();
+	currentTableRows.CombinedText = currentTableRows.CombinedText + $(this).text;
+	console.log("TD(colspan): "+ $(this).text());
+	currentTableRows.lengthDT++;
+	currenttable.tableRows[currenttable.tableRows.length]= currentTableRows;
+}
+
 
 function  handleRow(){
                 console.log("New table row");
@@ -373,10 +400,36 @@ function handleTable() {
 //        console.log(" -", $(this).children());
 }
 
+function handleUL() {
+            tablenum++;
+            //console.log("New Table");
+            currenttable = new tablesdatatype($(this).find("li").length);
+            tables[tables.length] = currenttable;
+            console.log($(this).children("li").length);
+            console.log("heading"+$(this).prev(":header").text());
+            currenttable.heading =  $(this).prev(":header").text();
+            var parent__ = $(this).parent();
+            var max = 5;
+            if(currenttable.heading  == "" && parent__ !== undefined && max >0 ) {
+                currenttable.heading = parent__.prev(":header").text();
+                parent__ = parent__.parent();
+                max--;
+//                console.log(parent__);
+            }
+            if(currenttable.heading  == "") {
+                currenttable.heading = null;
+            }
+            $(this).children('li').each(handleLI);
+            currenttable.columnLength =  verifyPrintGoodTables(currenttable);
+//        console.log(" -", $(this).children());
+}
+
+
 jsonifyTable = function(errors,window) {
     $ = window.$;
     console.log("Number of table: "+$("table").length);
     $("table").each(handleTable);
+    $("ul").each(handleUL);
     var json = jsonizeValidTables();
     chrome.runtime.sendMessage({ jsonresult: "OK", url : window.href, result : json}, function(response) {
       console.log(response);
