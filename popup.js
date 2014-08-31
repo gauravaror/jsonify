@@ -20,6 +20,7 @@ function populateJson(element,jsonString) {
     var tmp3 = tmp2.replace(/\\\\/g,"");
   //  console.log(tmp2);
     element.innerHTML  = tmp3;
+    document.getElementById("invisibletextcontent").textContent = json;
 }
 function getEditedJson() {
     var jsondiv = document.getElementById("jsoncontent");
@@ -139,6 +140,22 @@ document.addEventListener("DOMContentLoaded", function(event) {
     else {
         editor.textContent = "Editor";
     }
+    var client = new ZeroClipboard( document.getElementById("my-button_text") );
+
+client.on( "ready", function( readyEvent ) {
+  // alert( "ZeroClipboard SWF is ready!" );
+  client.on("copy",function(event) {
+    var client = event.clipboardData;
+    client.setData("text/plain",json);
+  });
+  client.on( "aftercopy", function( event ) {
+    // `this` === `client`
+    // `event.target` === the element that was clicked
+    event.target.style.display = "none";
+    alert("Copied text to clipboard: " + event.data["text/plain"] );
+  } );
+} );
+
     
 //    target.appendChild(spinner.el);
 });
