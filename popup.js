@@ -129,6 +129,16 @@ function changeMode(){
     }
     displayJSON(json);
 }
+
+// Copy provided text to the clipboard.
+function copyTextToClipboard(text) {
+    var copyFrom = document.getElementById('invisibletextcontent');
+    copyFrom.style.display = "block";
+    copyFrom.select();
+    document.execCommand('copy');
+    copyFrom.style.display = "none";
+}
+
 document.addEventListener("DOMContentLoaded", function(event) {
     var target = document.getElementById('spinner');
     spinner = new Spinner(opts).spin(target);
@@ -140,22 +150,5 @@ document.addEventListener("DOMContentLoaded", function(event) {
     else {
         editor.textContent = "Editor";
     }
-    var client = new ZeroClipboard( document.getElementById("my-button_text") );
-
-client.on( "ready", function( readyEvent ) {
-  // alert( "ZeroClipboard SWF is ready!" );
-  client.on("copy",function(event) {
-    var client = event.clipboardData;
-    client.setData("text/plain",json);
-  });
-  client.on( "aftercopy", function( event ) {
-    // `this` === `client`
-    // `event.target` === the element that was clicked
-    event.target.style.display = "none";
-    alert("Copied text to clipboard: " + event.data["text/plain"] );
-  } );
-} );
-
-    
-//    target.appendChild(spinner.el);
+    document.getElementById("my-button_text").onclick = copyTextToClipboard;
 });
