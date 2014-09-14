@@ -244,7 +244,7 @@ function getJSONType5(table) {
 
 function getJSON(table) {
     console.log("totalDH: "+table.totalDH+"table.columnLength: "+ table.columnLength+ "table.rowLength: "+table.rowLength);
-    if(table.rowLength > 2){
+    if(table.rowLength > 2) {
         if(table.totalDH == table.columnLength ) {
             //console.log("Jsoning the table as type 1");
             return getJSONType1(table);
@@ -277,7 +277,7 @@ function jsonizeValidTables() {
     for (var i = 0;i < tables.length; i++) {
         if(tables[i].validTable) {
             var json = getJSON(tables[i]);
-            if(json !== undefined && json != "{}") {
+            if(json !== undefined && json != "{}" && tables[i].heading!= null) {
                finaljsonobj[tables[i].heading] = json;
             } else {
     //            console.log("This type of table yet not supported :"+"totalDH: "+tables[i].totalDH+"table.columnLength: "+ tables[i].columnLength+ "table.rowLength: "+tables[i].rowLength);
