@@ -277,7 +277,7 @@ function jsonizeValidTables() {
     for (var i = 0;i < tables.length; i++) {
         if(tables[i].validTable) {
             var json = getJSON(tables[i]);
-            if(json !== undefined && json != "{}" && tables[i].heading!= null) {
+            if(json !== undefined && json != "{}" && (json.length != 0 || json.length == undefined)&& tables[i].heading!= null) {
                finaljsonobj[tables[i].heading] = json;
             } else {
     //            console.log("This type of table yet not supported :"+"totalDH: "+tables[i].totalDH+"table.columnLength: "+ tables[i].columnLength+ "table.rowLength: "+tables[i].rowLength);
