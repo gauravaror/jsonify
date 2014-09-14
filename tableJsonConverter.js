@@ -154,25 +154,25 @@ function getJSONType4(table) {
             for( var j=0; j < table.columnLength; j++){
             //    console.log(cleanString(table.tableRows[0].DH[j])+" : "+cleanString(table.tableRows[i].DT[j]));
                 if( table.tableRows[firstrow].lengthDT > 0 && table.tableRows[firstrow].lengthDH == 0 && table.tableRows[i].lengthDT > 0 && table.tableRows[i].lengthDH == 0) {
-					if(table.tableRows[firstrow].DT[j] != "" || table.tableRows[i].DT[j] != "" ) { 
+					if(table.tableRows[firstrow].DT[j] != "" && table.tableRows[i].DT[j] != "" ) { 
 	                    array[cleanString(table.tableRows[firstrow].DT[j])] = cleanString(table.tableRows[i].DT[j]);
 			            jsoncollection.push(array);
 						array = {};
 					}
                 } else if ( table.tableRows[firstrow].lengthDT > 0 && table.tableRows[firstrow].lengthDH == 0 && table.tableRows[i].lengthDT == 0 && table.tableRows[i].lengthDH >  0) {
-					if(table.tableRows[firstrow].DT[j] != "" || table.tableRows[i].DH[j] != "" ) { 
+					if(table.tableRows[firstrow].DT[j] != "" && table.tableRows[i].DH[j] != "" ) { 
 	                    array[cleanString(table.tableRows[firstrow].DT[j])] = cleanString(table.tableRows[i].DH[j]);
 			            jsoncollection.push(array);
 						array = {};
 					}
                 } else if ( table.tableRows[firstrow].lengthDT == 0 && table.tableRows[firstrow].lengthDH > 0 && table.tableRows[i].lengthDT == 0 && table.tableRows[i].lengthDH >  0) {
-					if(table.tableRows[firstrow].DH[j] != "" || table.tableRows[i].DH[j] != "" )  {
+					if(table.tableRows[firstrow].DH[j] != "" && table.tableRows[i].DH[j] != "" )  {
 						array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DH[j]);
 			            jsoncollection.push(array);
 						array = {};
 					}
                 } else if ( table.tableRows[firstrow].lengthDT == 0 && table.tableRows[firstrow].lengthDH > 0 && table.tableRows[i].lengthDT > 0 && table.tableRows[i].lengthDH ==  0) {
-					if(table.tableRows[firstrow].DH[j] != "" || table.tableRows[i].DT[j] != "" )  {
+					if(table.tableRows[firstrow].DH[j] != "" && table.tableRows[i].DT[j] != "" )  {
 						array[cleanString(table.tableRows[firstrow].DH[j])] = cleanString(table.tableRows[i].DT[j]);
 			            jsoncollection.push(array);
 						array = {};
@@ -192,7 +192,7 @@ function getJSONType2(table) {
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
  //           console.log(cleanString(table.tableRows[i].DH[0])+" : "+cleanString(table.tableRows[i].DT[0]));
-			if(table.tableRows[i].DH[0] != "" || table.tableRows[i].DT[0] != "" ) 
+			if(table.tableRows[i].DH[0] != "" && table.tableRows[i].DT[0] != "" ) 
 				array[cleanString(table.tableRows[i].DH[0])] = cleanString(table.tableRows[i].DT[0]);
         }
     }
@@ -206,14 +206,14 @@ function getJSONType3(table) {
         if (table.tableRows[i].validRow) {
       //      console.log("lengths DT "+table.tableRows[i].lengthDT+" length DH"+table.tableRows[i].lengthDH);
                 if(table.tableRows[i].lengthDT == 2) {
-					if(table.tableRows[i].DT[0] != "" || table.tableRows[i].DT[1] != "" ) 
+					if(table.tableRows[i].DT[0] != "" && table.tableRows[i].DT[1] != "" ) 
 						array[cleanString(table.tableRows[i].DT[0])] = cleanString(table.tableRows[i].DT[1]);
                 } else if (table.tableRows[i].lengthDT == 1 && table.tableRows[i].lengthDH == 1 ) {
     //                console.log(table.tableRows[i].DH[0] +" DT length : "+table.tableRows[i].DT[0]); 
-					if(table.tableRows[i].DH[0] != "" || table.tableRows[i].DT[0] != "" ) 
+					if(table.tableRows[i].DH[0] != "" && table.tableRows[i].DT[0] != "" ) 
 							array[cleanString(table.tableRows[i].DH[0])] = cleanString(table.tableRows[i].DT[0]);
                 } else if(table.tableRows[i].lengthDH == 2) {
-					if(table.tableRows[i].DH[0] != "" || table.tableRows[i].DH[1] != "" ) 
+					if(table.tableRows[i].DH[0] != "" && table.tableRows[i].DH[1] != "" ) 
 						array[cleanString(table.tableRows[i].DH[0])] = cleanString(table.tableRows[i].DH[1]);
                 }
         }
@@ -232,7 +232,7 @@ function getJSONType5(table) {
 	var jsoncollection =[];
     for(var i=0; i < table.tableRows.length; i++) {
         if (table.tableRows[i].validRow) {
-			if(table.heading != "" || table.tableRows[i].DT[0] != "" ) {
+			if(table.heading != null && table.tableRows[i].DT[0] != "" ) {
 				array[table.heading] = cleanString(table.tableRows[i].DT[0]);
 				jsoncollection.push(array);
 				array = {};
